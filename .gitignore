@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+runs/
+.DS_Store
+.streamlit/secrets.toml
+
+# Data files
+data/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Distribution
+dist/
+build/
+*.egg-info/
