@@ -52,7 +52,7 @@ Everything is ready for immediate execution.
 
 ### 1. Setup
 ```bash
-git clone https://github.com/your-username/wc2026-forecast.git
+git clone hhttps://github.com/abenezer4/World-cup-2026-live-forecaster.git
 cd wc2026-forecast
 pip install -r requirements.txt
 ```
