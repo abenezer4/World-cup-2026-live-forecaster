@@ -1,6 +1,4 @@
-This updated version incorporates the real data availability and the nuanced comparison between Dixon-Coles and Elo ratings.
 
----
 
 # Who Wins the 2026 World Cup?
 ### A Live, Calibrated Forecast using Bivariate-Poisson Simulation
@@ -8,7 +6,7 @@ This updated version incorporates the real data availability and the nuanced com
 
 This project is a tournament simulator. It uses a **Dixon–Coles match engine** feeding a **Monte Carlo simulator** to re-price title chances in real-time as the 2026 World Cup unfolds.
 
----
+
 
 ## Why Dixon-Coles? (The Methodology)
 

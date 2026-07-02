@@ -6,7 +6,8 @@ runs/
 .streamlit/secrets.toml
 
 # Data files
-data/
+data/processed/
+notebook/data/
 
 # Environment files
 .env
