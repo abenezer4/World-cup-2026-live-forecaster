@@ -1,109 +1,134 @@
-# Who Wins the 2026 World Cup? — A Live, Calibrated Forecast
-
-A bivariate-Poisson (Dixon–Coles) match model feeding a Monte Carlo tournament
-simulator, wrapped in a Streamlit dashboard. It re-prices every team's title
-chances **as results come in**: played group matches are locked to reality, and
-only the unplayed knockout bracket is simulated.
-
-
+This updated version incorporates the real data availability and the nuanced comparison between Dixon-Coles and Elo ratings.
 
 ---
 
-## The idea in one paragraph
+# Who Wins the 2026 World Cup?
+### A Live, Calibrated Forecast using Bivariate-Poisson Simulation
 
-You don't predict a tournament winner directly — there are far too few finals to
-learn from. Instead you predict **goals in a single match** well, then let a
-bracket of those matches play out tens of thousands of times and count how often
-each team is left standing. The match engine here is a weighted **Dixon–Coles
-bivariate Poisson**: it estimates each team's attack and defence strength plus a
-host-country effect, then turns any matchup into a full scoreline distribution.
-Recent games count more than old ones (180-day half-life) and competitive games
-count more than friendlies. After each matchday you update one CSV, re-run, and
-the title odds sharpen.
 
-## Why this is more than a toy
+This project is a tournament simulator. It uses a **Dixon–Coles match engine** feeding a **Monte Carlo simulator** to re-price title chances in real-time as the 2026 World Cup unfolds.
 
-- **It's calibrated, not just confident.** On held-out matches the model beats an
-  Elo-only baseline on both log loss (**1.043 vs 1.151**) and Brier score
-  (**0.623 vs 0.700**). When it says 60%, it means it. See the reliability curve
-  in `assets/calibration.png`.
-- **No data leakage.** Every feature for a match is computed using only matches
-  strictly before it, enforced by an assertion and covered by unit tests.
-- **Small-sample teams are regularised.** Attack/defence estimates shrink toward
-  the mean so a debutant with three matches can't look like a contender on noise.
-- **Reproducible runs.** Every run writes champion probabilities plus a metadata
-  file recording seed, sim count, fitted parameters, data hashes and library
-  versions.
+---
 
-## What's under the hood
+## Why Dixon-Coles? (The Methodology)
 
-| Stage | File | What it does |
-|-------|------|--------------|
-| Ingest | `src/ingest.py` | Loads raw sources, canonicalises team names, **fails loudly** on any unmapped name or malformed row |
-| Prepare | `src/prepare.py` | Merges history + live results into one chronological table; resolves host-vs-neutral by venue country |
-| Features | `src/features.py` | Elo-as-of-date, rolling goal rates, and a per-match weight = time-decay × competition importance, with a leakage guard |
-| Model | `src/model.py` | Weighted-MLE Dixon–Coles: sum-to-zero constraint for identifiability, L2 shrinkage, rho low-score-draw correction |
-| Simulate | `src/simulate.py` | Locks in actual group results; vectorised Monte Carlo over the remaining knockout bracket |
-| Backtest | `src/backtest.py` | Rolling-origin holdout; log loss, Brier, calibration plot vs Elo baseline |
-| App | `app.py` | Streamlit dashboard: title race, match predictor, standings, calibration |
+When predicting a tournament, most developers reach for a standard Classifier (like XGBoost) or a simple Elo rating. This project chooses the **Dixon-Coles Bivariate Poisson model** for its granular simulation capabilities:
 
-## Modelling choices, briefly
+*   **Beyond the "Win/Loss" Binary:** Standard classifiers treat a 1–0 win and a 5–0 win as the same "label." In a World Cup, goal difference matters for tie-breakers. Modeling the *rate of goals* allows us to simulate group-stage standings accurately.
+*   **Latent Strength Estimation:** The model decomposes every team into **Attack** and **Defense** parameters. This allows us to simulate a match between any two teams by comparing their relative strengths against the "global average."
+*   **The "Low-Score Draw" Correction:** It includes a correction parameter ($\rho$) to account for the statistical under-representation of 0–0 and 1–1 draws in standard Poisson models—essential for high-stakes knockout football.
 
-- **Bivariate Poisson over a classifier.** Modelling goals directly is the
-  principled route to win/draw/loss *and* exact scorelines, and the Dixon–Coles
-  correction fixes Poisson's well-known underestimate of low-scoring draws —
-  which matter enormously in knockouts.
-- **Time-decay + importance weighting instead of a state-space model.** Weighted
-  MLE captures most of the "current form" signal at a fraction of the complexity.
-  A Kalman/state-space upgrade is the obvious next step if calibration demands it.
-- **Simulate, don't extrapolate.** The champion question is answered by sampling
-  the bracket, not by fitting "who wins it all" on a handful of past finals.
+### The "Elo" Reality Check (Honest Limitation)
+It is important to note that the Dixon-Coles model **does not clearly beat a well-tuned Elo baseline** on log loss or Brier score in backtesting (see `assets/calibration.png`). 
 
-## Run it
+The "World Football Elo" is a decades-refined, incredibly robust baseline. The advantage of Dixon-Coles isn't a guaranteed predictive edge over Elo—it’s the fact that it **outputs a full scoreline distribution**. While Elo tells you who is more likely to win, Dixon-Coles allows us to simulate the exact goal-based mechanics of a tournament bracket.
 
+---
+
+##  Run It (Out of the Box)
+
+Unlike many data science repos, **real data is included**. 
+*   Historical results (`results.csv`)
+*   Elo ratings (`elo.csv`)
+*   Live 2026 results so far (`wc2026_live.csv`) 
+
+Everything is ready for immediate execution.
+
+### 1. Setup
 ```bash
+git clone https://github.com/your-username/wc2026-forecast.git
+cd wc2026-forecast
 pip install -r requirements.txt
+```
 
-# 1. generate the synthetic demo data (so it runs immediately)
-python src/make_synthetic.py
-
-# 2. run the whole pipeline once (prepare -> fit -> simulate -> backtest)
+### 2. Run the Pipeline
+This will prepare the data, fit the model, and run the Monte Carlo simulations:
+```bash
 python src/run.py
+```
 
-# 3. launch the dashboard
+### 3. Launch Dashboard
+```bash
 streamlit run app.py
 ```
 
-Update the forecast each matchday by editing `data/raw/wc2026_live.csv` with the
-latest results and re-running. The app caches the heavy steps, so tuning the
-sliders stays responsive.
+---
 
-## Using real data
+## � Project Structure
 
-The repo ships with **synthetic** data so it runs out of the box. For a live
-forecast, swap in:
-
-- **Match history** — Kaggle `martj42/international-football-results`
-- **Elo ratings** — eloratings.net (time-series snapshots)
-
-Keep the same column schema (see `src/make_synthetic.py` for the exact shape),
-add any new country spellings to `data/team_aliases.csv`, and re-run.
-
-## Honest limitations
-
-- Synthetic data is shown by default; headline numbers above are from that demo
-  and will change with real inputs.
-- The bracket logic is a compact 8-group → 16-team knockout for clarity; the real
-  48-team format with third-place qualifiers is a straightforward extension.
-- Injuries, suspensions and lineup news aren't modelled — a known gap that
-  bookmakers exploit.
-- This is analysis, **not betting advice**, and isn't affiliated with FIFA.
-
-## Tech
-
-Python · NumPy · pandas · SciPy · Matplotlib · Streamlit
+```
+wc2026/
+├── app.py                          # Main Streamlit application
+├── README.md                       # This file
+├── requirements.txt                # Python dependencies
+├── .gitignore                      # Git ignore rules
+│
+├── assets/                         # Static assets (charts, images)
+│
+├── data/                           # (Gitignored) All data files
+│   ├── processed/                  # Cleaned & processed data
+│   │   ├── champion_probs.csv
+│   │   ├── elo.csv
+│   │   ├── features.csv
+│   │   └── matches.csv
+│   ├── raw/                        # Raw input data
+│   │   ├── elo.csv
+│   │   ├── results.csv
+│   │   ├── shootouts.csv
+│   │   └── wc2026_live.csv
+│   └── team_aliases.csv
+│
+├── notebook/                       # Jupyter notebooks for exploration
+│   └── wc2026_full_workflow.ipynb
+│
+├── runs/                           # (Gitignored) Simulation run outputs
+│   └── {timestamp}/
+│       ├── champion_probs.csv
+│       └── run_metadata.json
+│
+└── src/                            # Core pipeline modules
+    ├── __init__.py
+    ├── app.py                      # Streamlit app entry point
+    ├── backtest.py                 # Backtesting utilities
+    ├── bracket_view.py             # Tournament bracket visualization
+    ├── compute_elo.py              # Elo rating calculations
+    ├── config.py                   # Configuration & constants
+    ├── features.py                 # Feature engineering
+    ├── ingest.py                   # Data ingestion & cleaning
+    ├── make_sample_data.py         # Sample data generation
+    ├── model.py                    # Dixon-Coles model implementation
+    ├── prepare.py                  # Data preparation pipeline
+    ├── run.py                      # Main pipeline orchestrator
+    └── simulate.py                 # Monte Carlo simulation engine
+```
 
 ---
 
-*Built as a portfolio project: a live, honest, calibration-first take on the
-"predict the World Cup with ML" genre.*
+## �🛠️ Architecture
+
+| Component | Logic | Purpose |
+| :--- | :--- | :--- |
+| **Ingest** | `src/ingest.py` | Data cleaning and canonical team-name mapping. |
+| **Features** | `src/features.py` | Calculates Elo-at-date, time-decayed weights (180-day half-life), and game importance. |
+| **Model** | `src/model.py` | Weighted MLE Dixon-Coles with L2 shrinkage (Regularization). |
+| **Sim** | `src/simulate.py` | Vectorized Monte Carlo over the knockout bracket. |
+| **App** | `app.py` | Streamlit UI for "What-if" scenarios and live updates. |
+
+---
+
+## Updating for Live Results
+As the 2026 World Cup progresses:
+1.  Open `data/raw/wc2026_live.csv`.
+2.  Add the latest match scores.
+3.  Re-run `python src/run.py`.
+4.  The dashboard will update with new title probabilities based on the "locked-in" results and simulated remaining bracket.
+
+---
+
+## Limitations
+*   **Small Samples:** Teams with very few matches are regularized toward the mean to prevent noise-driven "dark horse" predictions.
+*   **Intangibles:** Does not model injuries, red cards, or squad announcements.
+*   **Disclaimer:** This is an analytical project for portfolio purposes. It is **not betting advice** and is not affiliated with FIFA.
+
+---
+*Built with Python, NumPy, SciPy, and Streamlit.*
