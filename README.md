@@ -3,6 +3,24 @@
 # Who Wins the 2026 World Cup?
 ### A Live, Calibrated Forecast using Bivariate-Poisson Simulation
 
+**[Live Demo](https://world-cup-2026-live-forecastergit-d5gyjvqnobu5qfi2xliuja.streamlit.app/)** | **[GitHub Repo]https://github.com/abenezer4/World-cup-2026-live-forecaster.git*
+
+---
+
+## Dashboard Preview
+
+This is an interactive live forecaster. Explore championship odds, head-to-head match predictions, group standings, and the full tournament bracket:
+
+![Match Predictor](assets/dashboard-main.png)
+*Head-to-head match predictor with live probabilities*
+
+![Champion Probabilities](assets/champion-probs.png)
+*Updated championship odds as the tournament progresses*
+
+![Tournament Bracket](assets/bracket-view.png)
+*Full bracket view with confidence levels and simulated outcomes*
+
+---
 
 This project is a tournament simulator. It uses a **Dixon–Coles match engine** feeding a **Monte Carlo simulator** to re-price title chances in real-time as the 2026 World Cup unfolds.
 
@@ -102,7 +120,7 @@ wc2026/
 
 ---
 
-## �🛠️ Architecture
+## Architecture
 
 | Component | Logic | Purpose |
 | :--- | :--- | :--- |
