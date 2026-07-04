@@ -3,7 +3,7 @@
 # Who Wins the 2026 World Cup?
 ### A Live, Calibrated Forecast using Bivariate-Poisson Simulation
 
-**[Live Demo](https://world-cup-2026-live-forecastergit-d5gyjvqnobu5qfi2xliuja.streamlit.app/)** | **[GitHub Repo]https://github.com/abenezer4/World-cup-2026-live-forecaster.git*
+**[🔗 Live Demo](https://world-cup-2026-live-forecastergit-d5gyjvqnobu5qfi2xliuja.streamlit.app/)** | **[📂 GitHub Repo](https://github.com/abenezer4/World-cup-2026-live-forecaster.git)**
 
 ---
 
@@ -52,7 +52,7 @@ Everything is ready for immediate execution.
 
 ### 1. Setup
 ```bash
-git clone hhttps://github.com/abenezer4/World-cup-2026-live-forecaster.git
+git clone https://github.com/abenezer4/World-cup-2026-live-forecaster.git
 cd wc2026-forecast
 pip install -r requirements.txt
 ```
@@ -70,7 +70,7 @@ streamlit run app.py
 
 ---
 
-## � Project Structure
+## Project Structure
 
 ```
 wc2026/
